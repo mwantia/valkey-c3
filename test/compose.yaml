@@ -1,0 +1,43 @@
+services:
+  minio:
+    container_name: minio-test
+    image: minio/minio:latest
+    command: server /tmp --address :9000 --console-address :9001
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    environment:
+      - MINIO_ROOT_USER=FJDSJ
+      - MINIO_ROOT_PASSWORD=DSG643HGDS
+      - MINIO_DEFAULT_BUCKETS=valkey-snapshots
+
+  minio-buckets:
+    container_name: minio-buckets-test
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set minio http://minio:9000 FJDSJ DSG643HGDS;
+      /usr/bin/mc mb minio/valkey-snapshots;
+      exit 0;
+      "
+
+  valkey:
+    container_name: valkey-test
+    privileged: true
+    build:
+      context: ../.
+    depends_on:
+      - minio
+      - minio-buckets
+    ports:
+      - '6379:6379'
+    environment:
+      - VALKEY_DBNAME=valkey-test
+      - S3FS_DIR=/data
+      - S3_MOUNTER=s3fs
+      - S3_URL=http://minio:9000
+      - S3_BUCKET_NAME=valkey-snapshots
+      - S3_ACCESS_KEY=FJDSJ
+      - S3_SECRET_KEY=DSG643HGDS

@@ -1,0 +1,4 @@
+[Tt]tmp/
+[Cc]erts/
+
+**/*.override.*
