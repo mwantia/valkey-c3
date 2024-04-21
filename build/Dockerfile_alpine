@@ -1,0 +1,13 @@
+FROM debian:buster-slim as s3fsbuilder
+# Install s3fs
+RUN apt-get update && apt-get install -y s3fs
+RUN rm -rf /var/lib/apt/lists/*
+
+FROM valkey/valkey:7.2-alpine
+# Set up entrypoint script to handle environment variables and mount s3fs
+COPY ../docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+# Copy s3fs
+COPY --from=s3fsbuilder /usr/bin/s3fs /usr/bin/s3fs
+# Define the entry point to execute the performance testing script
+ENTRYPOINT ["/docker-entrypoint.sh"]

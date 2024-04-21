@@ -2,7 +2,9 @@ services:
   minio:
     container_name: minio-test
     image: minio/minio:latest
-    command: server /tmp --address :9000 --console-address :9001
+    command: server /data --address :9000 --console-address :9001
+    volumes:
+      - '../tmp/minio-data:/data'
     ports:
       - '9000:9000'
       - '9001:9001'
@@ -28,16 +30,35 @@ services:
     privileged: true
     build:
       context: ../.
+      dockerfile: ./build/Dockerfile
     depends_on:
       - minio
       - minio-buckets
-    ports:
-      - '6379:6379'
     environment:
       - VALKEY_DBNAME=valkey-test
+      - VALKEY_OPTIONS=--loglevel debug --save 60 1
       - S3FS_DIR=/data
       - S3_MOUNTER=s3fs
       - S3_URL=http://minio:9000
       - S3_BUCKET_NAME=valkey-snapshots
       - S3_ACCESS_KEY=FJDSJ
       - S3_SECRET_KEY=DSG643HGDS
+
+#  valkey-alpine:
+#    container_name: valkey-alpine-test
+#    privileged: true
+#    build:
+#      context: ../.
+#      dockerfile: ./build/Dockerfile_alpine
+#    depends_on:
+#      - minio
+#      - minio-buckets
+#    environment:
+#      - VALKEY_DBNAME=valkey-alpine-test
+#      - VALKEY_OPTIONS=--loglevel warning --save 60 1
+#      - S3FS_DIR=/data
+#      - S3_MOUNTER=s3fs
+#      - S3_URL=http://minio:9000
+#      - S3_BUCKET_NAME=valkey-snapshots
+#      - S3_ACCESS_KEY=FJDSJ
+#      - S3_SECRET_KEY=DSG643HGDS
